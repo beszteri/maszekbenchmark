@@ -7,6 +7,7 @@ namespace App\Http\Services;
 use App\Hardware;
 use App\Http\Repositories\ComputerRepositories;
 use App\Http\Repositories\HardwareRepositories;
+use App\Http\Repositories\StorageRepository;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -24,14 +25,22 @@ class HardwareService
     private $computerRepositories;
 
     /**
+     * @var StorageRepository
+     */
+    private $storageRepository;
+
+    /**
      * HardwareService constructor.
      * @param HardwareRepositories $hardwareRepositories
      * @param ComputerRepositories $computerRepostories
+     * @param StorageRepository $storageRepository
      */
-    public function __construct(HardwareRepositories $hardwareRepositories, ComputerRepositories $computerRepositories)
+    public function __construct(HardwareRepositories $hardwareRepositories, ComputerRepositories $computerRepositories,
+        StorageRepository $storageRepository)
     {
         $this->hardwareRepositories = $hardwareRepositories;
         $this->computerRepositories = $computerRepositories;
+        $this->storageRepository = $storageRepository;
     }
 
 
@@ -59,15 +68,15 @@ class HardwareService
 
     public function findAllSpecificComponents($component) :Collection
     {
-        $cpus = collect();
+        $hardwares = collect();
         foreach ($this->createHardwaresModel() as $part)
         {
             if ($part->getPart() === $component)
             {
-                $cpus->push($part);
+                $hardwares->push($part);
             }
         }
-        return $cpus;
+        return $hardwares;
     }
 
     public function getSearchedData($query)
@@ -75,24 +84,15 @@ class HardwareService
         return $this->hardwareRepositories->getSearchedData($query);
     }
 
-    public function getSpecificGeneratedCpu($id)
+
+    public function getSpecificGeneratedComponent($component, $id)
     {
-        return $this->computerRepositories->getSpecificGeneratedCpu($id);
+        return $this->computerRepositories->getSpecificGeneratedParts($id, $component);
     }
 
-    public function getSpecificGeneratedGpu($id)
+    public function getSpecificGeneratedStorage($component, $id)
     {
-        return $this->computerRepositories->getSpecificGeneratedGpu($id);
-    }
-
-    public function getSpecificGeneratedRam($id)
-    {
-        return $this->computerRepositories->getSpecificGeneratedRam($id);
-    }
-
-    public function getSpecificGeneratedHdd($id)
-    {
-        return $this->computerRepositories->findHddById($id);
+        return $this->storageRepository->getSpecificGeneratedParts($id, $component);
     }
 
     public function getDataFromSession()

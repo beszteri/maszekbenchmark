@@ -4,10 +4,10 @@
 namespace App\Http\Services;
 
 
-use App\Computer;
 use App\Http\Repositories\ComputerRepositories;
 use App\Http\Repositories\HardwareRepositories;
-use Illuminate\Support\Facades\DB;
+use App\Http\Repositories\StorageRepository;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Session;
 
 class ComputerService
@@ -20,90 +20,73 @@ class ComputerService
      * @var HardwareRepositories
      */
     private $hardwareRepositories;
-
+    /**
+     * @var StorageRepository
+     */
+    private $storageRepository;
     /**
      * ComputerService constructor.
      * @param ComputerRepositories $computerRepositories
      * @param HardwareRepositories $hardwareRepositories
+     * @param StorageRepository $storageRepository
      */
-    public function __construct(ComputerRepositories $computerRepositories, HardwareRepositories $hardwareRepositories)
+    public function __construct(ComputerRepositories $computerRepositories, HardwareRepositories $hardwareRepositories, StorageRepository $storageRepository)
     {
         $this->computerRepositories = $computerRepositories;
         $this->hardwareRepositories = $hardwareRepositories;
+        $this->storageRepository = $storageRepository;
     }
 
 
     public function generateRandomComputers(){
-        $hardwares = $this->hardwareRepositories->getAllDataFromHardwares();
-        $cpus = collect();
-        $intelCpus = collect();
-        $gpus = collect();
-        $rams = collect();
-        $ssds = collect();
-        $hdds = collect();
-        $arrayToInsert = array();
-        foreach ($hardwares as $hardware)
-        {
-            if ($hardware->part === 'CPU' && $hardware->brand === 'Intel')
-            {
-                $intelCpus->push($hardware);
-                $cpus->push($hardware);
-            }elseif ($hardware->part === 'GPU')
-            {
-                $gpus->push($hardware);
-            }elseif ($hardware->part === 'RAM')
-            {
-                $rams->push($hardware);
-            }elseif ($hardware->part === 'SSD')
-            {
-                $ssds->push($hardware);
-            }elseif ($hardware->part === 'HDD')
-            {
-                $hdds->push($hardware);
-            }elseif ($hardware->part === 'CPU' && $hardware->brand === 'AMD')
-            {
-                $cpus->push($hardware);
-            }
-        }
+        $cpus = $this->hardwareRepositories->getSpecificHardwares("CPU");
+        $intelCpus = $this->hardwareRepositories->getIntelCpus();
+        $gpus = $this->hardwareRepositories->getSpecificHardwares("GPU");
+        $rams = $this->hardwareRepositories->getSpecificHardwares("RAM");
+        $storages = $this->hardwareRepositories->getStorages();
+
         for ($i = 0; $i < 100000; $i++) {
-            $ssdsToInsert = "";
-            $ssdScoresToInsert = "";
-            $hddsToInsert = "";
-            $hddScoresToInsert = "";
-            $scoreDifference = rand(900, 1100) / 1000;
             $cpu = $cpus->random();
-            $cpuScore = $cpu->score * $scoreDifference;
+            $cpuScore = $cpu->score * $this->scoreDifference();
             $gpu = $gpus->random();
-            $gpuScore = $gpu->score * $scoreDifference;
+            $gpuScore = $gpu->score * $this->scoreDifference();
             if ($cpu->part === 'AMD' && $gpu->part === 'Intel') {
                 $cpu = $intelCpus->random();
-                $cpuScore = $cpu->score * $scoreDifference;
+                $cpuScore = $cpu->score * $this->scoreDifference();
             }
             $ram = $rams->random();
-            $ramScore = $ram->score * $scoreDifference;
-            $storageNumber = rand(1, 5);
-            for ($s = 1; $s <= $storageNumber; $s++) {
-                $selectStorage = rand(0, 1);
-                if ($selectStorage === 0) {
-                    $tempSsd = $ssds->random();
-                    $tempSsdScore = $tempSsd->score * $scoreDifference;
-                    $ssdsToInsert .= $tempSsd->id . ",";
-                    $ssdScoresToInsert .= $tempSsdScore . ",";
-                } else {
-                    $tempHdd = $hdds->random();
-                    $tempHddScore = $tempHdd->score * $scoreDifference;
-                    $hddsToInsert .= $tempHdd->id . ",";
-                    $hddScoresToInsert .= $tempHddScore . ",";
-                }
+            $ramScore = $ram->score * $this->scoreDifference();
+            $storageToIns=$this->makeStorageToIns($storages);
+            $compArrToInsert = ['cpu_id' => $cpu->id, 'cpu_score' => $cpuScore, 'gpu_id' => $gpu->id,
+                'gpu_score' => $gpuScore, 'ram_id' => $ram->id, 'ram_score' => $ramScore];
+            $compId = $this->computerRepositories->saveDataToDb($compArrToInsert);
+            foreach ($storageToIns as $storage) {
+                $storage['compid'] = $compId;
+                $this->storageRepository->saveDataToDb($storage);
             }
-            $ssdsToInsert = rtrim($ssdsToInsert, ",");
-            $hddsToInsert = rtrim($hddsToInsert, ",");
-            $ssdScoresToInsert = rtrim($ssdScoresToInsert, ",");
-            $hddScoresToInsert = rtrim($hddScoresToInsert, ",");
-            $arrayToInsert = ['cpu_id' => $cpu->id, 'cpu_score' => $cpuScore, 'gpu_id' => $gpu->id, 'gpu_score' => $gpuScore, 'ram_id' => $ram->id, 'ram_score' => $ramScore, 'ssd_ids' => $ssdsToInsert,
-                'ssd_scores' => $ssdScoresToInsert, 'hdd_ids' => $hddsToInsert, 'hdd_scores' => $hddScoresToInsert];
-            $this->computerRepositories->saveComputerToDb($arrayToInsert);
+
         }
+    }
+
+    public function scoreDifference() :int
+    {
+        return rand(900, 1100) / 1000;
+    }
+
+    private function makeStorageToIns(Collection $storages) :array
+    {
+        $storageToIns = [];
+        $storageNumber = rand(1, 5);
+        for ($s = 1; $s <= $storageNumber; $s++) {
+            $storage = $storages->random();
+            $scoreDifference = rand(900, 1100) / 1000;
+            $storageScore = $storage->score * $scoreDifference;
+            $storageToIns[] = [
+                'storageid' => $storage->id,
+                'score' => $storageScore,
+            ];
+        }
+        return $storageToIns;
     }
 
     public function countComputers()
@@ -116,7 +99,7 @@ class ComputerService
         return $this->computerRepositories->findHardware($model);
     }
 
-    public function runATest()
+    public function runATest() :array
     {
         $scoreDifference = rand(900, 1100) / 1000;
         $gpuScore = Session::get('GPU')[4];

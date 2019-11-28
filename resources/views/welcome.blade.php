@@ -32,7 +32,7 @@
     </table>
         <hr>
         <h4>Your average gamer score with these components: ~{{round($gamerScore)}}</h4>
-        <h4>Your average esktop score with these components: ~{{round($desktopScore)}}</h4>
+        <h4>Your average desktop score with these components: ~{{round($desktopScore)}}</h4>
         <h4>Your average workstation score with these components: ~{{round($workstationScore)}}</h4>
     @endif
 

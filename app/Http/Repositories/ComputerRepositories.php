@@ -7,56 +7,42 @@ namespace App\Http\Repositories;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
-class ComputerRepositories
+class ComputerRepositories extends AbstractRepositories
 {
-    public function saveComputerToDb($arrayToInsert)
-    {
-        DB::table('computers')->insert($arrayToInsert);
-    }
+    const COMPUTER_PARTS = ['cpu', 'gpu', 'ram'];
+    const TABLE_NAME = "computers";
 
     public function countComputers()
     {
-        return DB::table('computers')->count();
+        return $this->getQueryBuilder()->count();
     }
 
-    public function findHardware($model)
+    /*public function getSpecificGeneratedParts(int $id, string $partType): ?Collection
     {
-        return DB::table('computers')->where('model', '=', $model);
-    }
+        if (!in_array($partType, array_merge(self::STORAGES, self::COMPUTER_PARTS))) {
+            return null;
+        }
 
-    public function findHddById($id)
-    {
-        return DB::table('computers')->where('hdd_ids', 'like', "%$id%")->get();
-    }
+        if (in_array($partType, self::STORAGES)) {
+            $tableName = 'storages';
+        } else {
+            $tableName = 'computers';
+        }
 
-    public function findSsdById($id)
-    {
-        return DB::table('computers')->where('ssd_ids', 'like', "%$id%")->get();
-    }
-
-    public function getSpecificGeneratedCpu($id)
-    {
-        return DB::table('computers')->where('cpu_id', '=', $id)->get([
+        return DB::table($tableName)->where($partType . '_id', '=', $id)->get([
             '*',
-            DB::raw('round(cpu_score) as cpu_score'),
+            DB::raw('round(' . $partType . '_score) as score'),
+        ]);
+    }*/
+
+    public function getSpecificGeneratedParts(int $id, string $partType): ?Collection
+    {
+        if (!in_array($partType, self::COMPUTER_PARTS)) {
+            return null;
+        }
+        return $this->getQueryBuilder()->where($partType . '_id', '=', $id)->get([
+            '*',
+            DB::raw('round(' . $partType . '_score) as score'),
         ]);
     }
-
-    public function getSpecificGeneratedGpu($id)
-    {
-        return DB::table('computers')->where('gpu_id', '=', $id)->get([
-            '*',
-            DB::raw('round(gpu_score) as gpu_score'),
-        ]);
-    }
-
-    public function getSpecificGeneratedRam($id)
-    {
-        return DB::table('computers')->where('ram_id', '=', $id)->get([
-            '*',
-            DB::raw('round(ram_score) as ram_score'),
-        ]);
-    }
-
-
 }

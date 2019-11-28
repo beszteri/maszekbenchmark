@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Session;
 class HardwaresController extends Controller
 {
     private $hardwareService;
-
     /**
      * HardwaresController constructor.
      */
@@ -32,157 +31,58 @@ class HardwaresController extends Controller
         return view('hardwares.index');
     }
 
-    public function cpus($id)
+    public function displaySelector($component, $id)
+    {
+        $parts = ['cpus', 'gpus', 'rams', 'hdds', 'ssds'];
+        if (in_array($component, $parts)) {
+            $data = $this->getComponentsData($component, $id);
+            return view('hardwares.showcomponents')->with($data);
+
+        } else {
+            $data = $this->getComponentData($component, $id);
+            return view('hardwares.showcomponent')->with($data);
+        }
+    }
+
+    public function getComponentsData($component, $id)
     {
         $button = $id;
         if ($id < 3)
         {
             $button = 3;
         }
-        $cpus = $this->hardwareService->findAllSpecificComponents("CPU");
-        $cpusForPage = $cpus->forPage($id,9)->values();
+        $strToFunc = rtrim($component, 's');
+        $components = $this->hardwareService->findAllSpecificComponents(strtoupper($strToFunc));
+        $componentsForPage = $components->forPage($id,9)->values();
         $data = [
-            'cpus' => $cpusForPage,
-            'button' => $button
+            'components' => $componentsForPage,
+            'button' => $button,
+            'component' => $strToFunc,
         ];
-        return view('hardwares.cpus')->with($data);
+        return $data;
     }
 
-    public function gpus($id)
+    public function getComponentData($component, $id)
     {
-        $button = $id;
-        if ($id < 3)
-        {
-            $button = 3;
-        }
-        $gpus = $this->hardwareService->findAllSpecificComponents("GPU");
-        $gpusForPage = $gpus->forPage($id,9)->values();
-        $data = [
-            'gpus' => $gpusForPage,
-            'button' => $button
-        ];
-
-        return view('hardwares.gpus')->with($data);
-    }
-
-    public function rams($id)
-    {
-        $button = $id;
-        if ($id < 3)
-        {
-            $button = 3;
-        }
-        $rams = $this->hardwareService->findAllSpecificComponents("RAM");
-        $ramsForPage = $rams->forPage($id,9)->values();
-        $data = [
-            'rams' => $ramsForPage,
-            'button' => $button
-        ];
-
-        return view('hardwares.rams')->with($data);
-    }
-
-    public function hdds($id)
-    {
-        $button = $id;
-        if ($id < 3)
-        {
-            $button = 3;
-        }
-        $hdds = $this->hardwareService->findAllSpecificComponents("HDD");
-        $hddsForPage = $hdds->forPage($id,9)->values();
-        $data = [
-            'hdds' => $hddsForPage,
-            'button' => $button
-        ];
-
-        return view('hardwares.hdds')->with($data);
-    }
-
-    public function showCpu($id)
-    {
+        $components = [];
         $hardware = $this->hardwareService->findHardwareById($id);
-        $cpus = $this->hardwareService->getSpecificGeneratedCpu($id);
+        if ($component == 'hdd' || $component == 'ssd') {
+            $components = $this->hardwareService->getSpecificGeneratedStorage($component, $id);
+        }else {
+            $components = $this->hardwareService->getSpecificGeneratedComponent($component, $id);
+        }
         $labels = [];
-        foreach ($cpus as $cpu) {
-            array_push($labels, $cpu->cpu_score);
+        foreach ($components as $component) {
+            array_push($labels, $component->score);
         }
         $sortedLabels = array_count_values($labels);
         ksort($sortedLabels);
         $data = [
             'hardware' => $hardware,
-            'cpus' => $cpus,
+            'components' => $components,
             'labels' =>  $sortedLabels,
         ];
-        dd($sortedLabels);
-        return view('hardwares.showcpu')->with($data);
-    }
-
-    public function showGpu($id)
-    {
-        $hardware = $this->hardwareService->findHardwareById($id);
-        $gpus = $this->hardwareService->getSpecificGeneratedGpu($id);
-        $labels = [];
-        foreach ($gpus as $gpu) {
-            array_push($labels, $gpu->gpu_score);
-        }
-        $sortedLabels = array_count_values($labels);
-        ksort($sortedLabels);
-        $data = [
-            'hardware' => $hardware,
-            'gpus' => $gpus,
-            'labels' =>  $sortedLabels,
-        ];
-        return view('hardwares.showgpu')->with($data);
-    }
-
-    public function showRam($id)
-    {
-        $hardware = $this->hardwareService->findHardwareById($id);
-        $rams = $this->hardwareService->getSpecificGeneratedRam($id);
-        $labels = [];
-        foreach ($rams as $ram) {
-            array_push($labels, $ram->ram_score);
-        }
-        $sortedLabels = array_count_values($labels);
-        ksort($sortedLabels);
-        $data = [
-            'hardware' => $hardware,
-            'rams' => $rams,
-            'labels' =>  $sortedLabels,
-        ];
-        return view('hardwares.showram')->with($data);
-    }
-
-    public function showHdd($id)
-    {
-        $hardware = $this->hardwareService->findHardwareById($id);
-        $comps = $this->hardwareService->getSpecificGeneratedHdd($id);
-        $hardware = $this->hardwareService->findHardwareById($id);
-        $allStorageScore = array();
-        foreach ($comps as $comp)
-        {
-            $storageIds = explode(",", $comp->hdd_ids);
-            $storageIds = array_map('intval', $storageIds);
-            $storageScores = explode(",", $comp->hdd_scores);
-            $storageScores = array_map('intval', $storageScores);
-
-            $scoreKey = array_search($id, $storageIds);
-            $storageScore = $storageScores[$scoreKey];
-            array_push($allStorageScore, $storageScore);
-        }
-        $storageScore = array_sum($allStorageScore) / count($allStorageScore);
-        $storage = [$hardware->id, $hardware->part, $hardware->brand, $hardware->model, $storageScore];
-        $labels = $allStorageScore;
-
-        $sortedLabels = array_count_values($labels);
-        ksort($sortedLabels);
-        $data = [
-            'hardware' => $hardware,
-            'hdds' => $labels,
-            'labels' =>  $sortedLabels,
-        ];
-        return view('hardwares.showhdd')->with($data);
+        return $data;
     }
 
     public function search(Request $request)
@@ -198,11 +98,11 @@ class HardwaresController extends Controller
     public function builder()
     {
         $data = $this->hardwareService->getDataFromSession();
+        unset($data['higherStorageScore']);
         $gamerScore = $this->hardwareService->getGamerScore();
         $workstationScore = $this->hardwareService->getWorkstationScore();
         $desktopScore = $this->hardwareService->getDesktopScore();
         return view('welcome')->with('data', $data)->with('gamerScore', $gamerScore)->with('workstationScore', $workstationScore)
             ->with('desktopScore', $desktopScore);
     }
-
 }

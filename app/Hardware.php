@@ -125,4 +125,5 @@ class Hardware extends Model
     {
         $this->score = $score;
     }
+
 }

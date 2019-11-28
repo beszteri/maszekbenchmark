@@ -38,7 +38,7 @@
         </div>
         <div class="card-body">
             <p class="card-text">See all the SSDs from database.</p>
-            <a href="#" class="btn btn-primary">List SSDs</a>
+            <a href="/hardwares/ssds/1" class="btn btn-primary">List SSDs</a>
         </div>
     </div>
     <br>

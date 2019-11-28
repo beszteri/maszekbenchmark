@@ -14,6 +14,20 @@
       <executable />
     </execution>
   </component>
+  <component name="DatabaseView">
+    <option name="SHOW_INTERMEDIATE" value="true" />
+    <option name="GROUP_DATA_SOURCES" value="true" />
+    <option name="GROUP_SCHEMA" value="true" />
+    <option name="GROUP_CONTENTS" value="false" />
+    <option name="SORT_POSITIONED" value="false" />
+    <option name="SHOW_EMPTY_GROUPS" value="false" />
+    <option name="AUTO_SCROLL_FROM_SOURCE" value="false" />
+    <option name="HIDDEN_KINDS">
+      <set />
+    </option>
+    <expand />
+    <select />
+  </component>
   <component name="PhpWorkspaceProjectConfiguration">
     <include_path>
       <path value="$PROJECT_DIR$/vendor/paragonie/random_compat" />
@@ -107,10 +121,13 @@
   <component name="ProjectId" id="1Tdq3fDddbjZMJq8tKpVCdIh5lD" />
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../firstLaravel" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/app/Http/Repositories" />
     <property name="nodejs_package_manager_path" value="npm" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\xampp\htdocs\maszekbencmark\app\Http\Repositories" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\xampp\htdocs\maszekbencmark\public\storage" />
       <recent name="C:\xampp\htdocs\maszekbencmark\public" />
@@ -149,7 +166,7 @@
       <workItem from="1573807285032" duration="12130000" />
       <workItem from="1574062349633" duration="60855000" />
       <workItem from="1574250878886" duration="13984000" />
-      <workItem from="1574321016961" duration="73518000" />
+      <workItem from="1574321016961" duration="104351000" />
     </task>
     <servers />
   </component>

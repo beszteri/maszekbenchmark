@@ -8,21 +8,38 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 
-class HardwareRepositories
+class HardwareRepositories extends AbstractRepositories
 {
+    const TABLE_NAME = "hardwares";
+
     public function getAllDataFromHardwares() :Collection
     {
-        return DB::table('hardwares')->get();
+        return $this->getQueryBuilder()->get();
     }
 
     public function getSearchedData($query)
     {
-        return DB::table('hardwares')->where('model', 'like', "%$query%")->get();
+        return $this->getQueryBuilder()->where('model', 'like', "%$query%")->get();
+    }
+
+    public function getIntelCpus() :Collection
+    {
+        return $this->getQueryBuilder()->where('part', '=', 'CPU')
+            ->where('brand', '=', 'Intel')->get();
+    }
+
+    public function getStorages() :Collection
+    {
+        return $this->getQueryBuilder()->where('part', '=', 'SSD')->where('part','=', 'HDD')->get();
+    }
+
+    public function getSpecificHardwares($partType): Collection
+    {
+        return $this->getQueryBuilder()->where('part', '=', $partType)->get();
     }
 
     public function findHardwareById($id)
     {
-        return DB::table('hardwares')->where('id', '=', $id)->get();
+        return $this->getQueryBuilder()->where('id', '=', $id)->get();
     }
-
 }
