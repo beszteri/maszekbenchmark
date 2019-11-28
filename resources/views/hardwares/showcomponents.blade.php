@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <h1>asd</h1>
+    <h1>Components</h1>
     <br>
     @if(count($components) > 0)
         <div class="card-group">

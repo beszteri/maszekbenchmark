@@ -30,7 +30,8 @@ class HardwareRepositories extends AbstractRepositories
 
     public function getStorages() :Collection
     {
-        return $this->getQueryBuilder()->where('part', '=', 'SSD')->where('part','=', 'HDD')->get();
+        return $this->getQueryBuilder()->where('part', '=', 'SSD')->
+        orWhere('part', '=', 'HDD')->get();
     }
 
     public function getSpecificHardwares($partType): Collection
